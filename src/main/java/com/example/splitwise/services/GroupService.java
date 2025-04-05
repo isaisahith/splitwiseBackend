@@ -5,6 +5,8 @@ import com.example.splitwise.repositories.ExpenseRepository;
 import com.example.splitwise.repositories.GroupRepository;
 import com.example.splitwise.repositories.UserExpenseRepository;
 import com.example.splitwise.repositories.UserRepository;
+import com.example.splitwise.strategies.SettleUpStrategy;
+import com.example.splitwise.strategies.SimpleSettleUpStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -164,5 +166,20 @@ public class GroupService {
         List<Expense> expenses = expenseRepository.findByGroup(groupOptional.get());
         return expenses;
 
+    }
+
+    public List<Transaction> getSettleUpTransactions(Integer groupId) throws Exception {
+        Optional<Group> groupOptional = groupRepository.findById(groupId);
+        if(groupOptional.isEmpty()){
+            throw new Exception("Group not found");
+        }
+
+        List<Expense> expenses = expenseRepository.findByGroup(groupOptional.get());
+        List<Transaction> transactions;
+
+        SettleUpStrategy strategy = new SimpleSettleUpStrategy();
+        transactions = strategy.settleUp(expenses);
+
+        return transactions;
     }
 }

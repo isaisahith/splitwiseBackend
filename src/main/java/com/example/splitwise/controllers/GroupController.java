@@ -2,10 +2,7 @@ package com.example.splitwise.controllers;
 
 import com.example.splitwise.dtos.*;
 import com.example.splitwise.dtos.ResponseStatus;
-import com.example.splitwise.models.Expense;
-import com.example.splitwise.models.Group;
-import com.example.splitwise.models.User;
-import com.example.splitwise.models.UserExpense;
+import com.example.splitwise.models.*;
 import com.example.splitwise.services.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -103,5 +100,20 @@ public class GroupController {
         }
         return response;
 
+    }
+
+    @GetMapping("/getSettleUp")
+    public GetSettleUpTransactionsResp getSettleUpTransactions(@RequestBody GetSettleUpTransactionsReqDto req){
+        GetSettleUpTransactionsResp response = new GetSettleUpTransactionsResp();
+        try{
+            List<Transaction> transactionList = groupService.getSettleUpTransactions(req.getGroupId());
+            response.setTransactionList(transactionList);
+            response.setResponseStatus(ResponseStatus.SUCCESS);
+        } catch (Exception e) {
+            response.setMessage(e.getMessage());
+            response.setResponseStatus(ResponseStatus.FAILURE);
+        }
+
+        return response;
     }
 }
