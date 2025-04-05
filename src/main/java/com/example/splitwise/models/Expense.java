@@ -20,5 +20,5 @@ public class Expense extends BaseModel{
     @OneToMany
     private List<UserExpense> paidBy;
     @OneToMany
-    private List<Expense> paidFor;
+    private List<UserExpense> paidFor;
 }

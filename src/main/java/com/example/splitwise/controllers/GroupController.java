@@ -1,16 +1,14 @@
 package com.example.splitwise.controllers;
 
-import com.example.splitwise.dtos.CreateGroupReqDto;
-import com.example.splitwise.dtos.CreateGroupRespDto;
+import com.example.splitwise.dtos.*;
 import com.example.splitwise.dtos.ResponseStatus;
+import com.example.splitwise.models.Expense;
 import com.example.splitwise.models.Group;
 import com.example.splitwise.models.User;
+import com.example.splitwise.models.UserExpense;
 import com.example.splitwise.services.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,5 +39,69 @@ public class GroupController {
             createGroupRespDto.setResponseStatus(ResponseStatus.FAILURE);
         }
         return createGroupRespDto;
+    }
+
+    @PostMapping("/addExpense")
+    public CreateExpenseResponseDto addExpense(@RequestBody CreateExpenseDto req){
+        CreateExpenseResponseDto response = new CreateExpenseResponseDto();
+        try{
+            response.setResponseStatus(ResponseStatus.SUCCESS);
+            groupService.addExpense(req.getName(),
+                    req.getDescription(),
+                    req.getGroupId(),
+                    req.getAmount(),
+                    req.getPaidBy(),
+                    req.getPaidFor());
+
+        } catch (Exception e) {
+            response.setMessage(e.getMessage());
+            response.setResponseStatus(ResponseStatus.FAILURE);
+        }
+        return response;
+    }
+
+    @GetMapping("/getExpenses")
+    public GetExpenseResponseDto getExpenses(@RequestBody GetExpenseReqDto req){
+        GetExpenseResponseDto response = new GetExpenseResponseDto();
+        try{
+            List<Expense> expenses = groupService.getExpenses(req.getGroupId());
+            List<ExpenseDto> expenseDtos = new ArrayList<>();
+            for(Expense expense: expenses){
+                List<UserExpenseDto> userExpenseDtos = new ArrayList<>();
+                for(UserExpense ue: expense.getPaidBy()){
+                    UserExpenseDto userExpenseDto = new UserExpenseDto();
+                    userExpenseDto.setName(ue.getUser().getName());
+                    userExpenseDto.setEmail(ue.getUser().getEmail());
+                    userExpenseDto.setAmount(ue.getAmount());
+                    userExpenseDto.setType(ue.getType());
+                    userExpenseDtos.add(userExpenseDto);
+                }
+                ExpenseDto expenseDto = new ExpenseDto();
+                expenseDto.setName(expense.getExpenseName());
+                expenseDto.setDescription(expense.getDescription());
+                expenseDto.setAmount(expense.getAmount());
+                for(UserExpense ue: expense.getPaidFor()){
+                    UserExpenseDto userExpenseDto = new UserExpenseDto();
+                    userExpenseDto.setName(ue.getUser().getName());
+                    userExpenseDto.setEmail(ue.getUser().getEmail());
+                    userExpenseDto.setAmount(ue.getAmount());
+                    userExpenseDto.setType(ue.getType());
+                    userExpenseDtos.add(userExpenseDto);
+
+                }
+                expenseDto.setUserExpenses(userExpenseDtos);
+                expenseDtos.add(expenseDto);
+            }
+            response.setExpenses(expenseDtos);
+            response.setGroupId(req.getGroupId());
+            response.setResponseStatus(ResponseStatus.SUCCESS);
+
+
+        } catch (Exception e) {
+            response.setMessage(e.getMessage());
+            response.setResponseStatus(ResponseStatus.FAILURE);
+        }
+        return response;
+
     }
 }
